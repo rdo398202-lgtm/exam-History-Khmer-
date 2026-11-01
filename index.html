@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ប្រឡងប្រវត្តិសាស្ត្រខ្មែរ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans Khmer','Khmer OS',sans-serif;background:#0b1f4b;color:#1a1a1a;min-height:100vh;padding:14px}
+.card{background:#fff;max-width:640px;margin:0 auto 14px;border-radius:16px;padding:20px;border-top:6px solid #d4a017;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+h1{color:#0b1f4b;font-size:1.3rem;text-align:center;line-height:1.7}
+.sub{text-align:center;color:#8a6a00;font-weight:700;margin-bottom:14px}
+label{display:block;font-weight:700;margin:12px 0 4px;color:#0b1f4b}
+input{width:100%;padding:12px;border:2px solid #cbd3e6;border-radius:10px;font:inherit}
+input:focus{outline:none;border-color:#d4a017}
+input[readonly]{background:#f0f2f8}
+.btn{display:block;width:100%;margin-top:16px;padding:14px;border:0;border-radius:10px;background:#0b1f4b;color:#f5c542;font:inherit;font-weight:700;font-size:1.05rem}
+.btn:disabled{opacity:.4}
+.note{background:#fff7e0;border-left:4px solid #d4a017;padding:10px;border-radius:6px;margin-top:14px;font-size:.92rem;line-height:1.7}
+.err{color:#c0392b;font-weight:700;margin-top:10px;text-align:center}
+.hide{display:none}
+.top{position:sticky;top:0;background:#0b1f4b;color:#f5c542;padding:10px 14px;border-radius:10px;max-width:640px;margin:0 auto 12px;display:flex;justify-content:space-between;font-weight:700;z-index:5}
+.q{font-weight:700;line-height:1.8;margin-bottom:10px}
+.opt{display:block;padding:12px;border:2px solid #cbd3e6;border-radius:10px;margin-bottom:8px;line-height:1.6}
+.opt.sel{border-color:#d4a017;background:#fff7e0}
+.opt.ok{border-color:#1e8e3e;background:#e6f6ea}
+.opt.no{border-color:#c0392b;background:#fdeaea}
+.opt input{width:auto;margin-right:8px}
+.score{font-size:3rem;text-align:center;color:#0b1f4b;font-weight:700}
+.grade{text-align:center;font-size:1.2rem;font-weight:700;color:#8a6a00}
+.info p{margin:4px 0}
+footer{text-align:center;color:#f5c542;font-size:.85rem;margin:10px 0}
+</style>
+</head>
+<body>
+
+<!-- ទំព័រចាប់ផ្តើម -->
+<div class="card" id="start">
+  <h1>វិញ្ញាសាប្រឡងប្រវត្តិសាស្ត្រខ្មែរ<br>សម័យសាធារណរដ្ឋខ្មែរ (១៩៧០–១៩៧៥)</h1>
+  <div class="sub">វិទ្យាល័យប៊ុនរ៉ានីហ៊ុនសែនចាន់ថ្នាល</div>
+  <label>ឈ្មោះសិស្ស</label>
+  <input id="name" placeholder="បញ្ចូលឈ្មោះពេញរបស់អ្នក" autocomplete="off">
+  <label>ថ្នាក់</label>
+  <input id="cls" value="ថ្នាក់ទី១២" readonly>
+  <label>សាលា</label>
+  <input id="school" value="វិទ្យាល័យប៊ុនរ៉ានីហ៊ុនសែនចាន់ថ្នាល" readonly>
+  <div class="note">
+    • មាន ១០ សំណួរ ពិន្ទុពេញ ១០០ ។ ពេលវេលា ១៥ នាទី។<br>
+    • អាចប្រឡងបានត្រឹមតែ <b>២ ដង</b>ប៉ុណ្ណោះ ក្នុងមួយឈ្មោះ។<br>
+    • កុំចេញ ឬ Refresh ពេលកំពុងប្រឡង ព្រោះរាប់ជាមួយដងដែលបានប្រើ។
+  </div>
+  <div class="err" id="err"></div>
+  <button class="btn" onclick="begin()">ចាប់ផ្តើមប្រឡង</button>
+</div>
+
+<!-- ទំព័រប្រឡង -->
+<div id="exam" class="hide">
+  <div class="top"><span id="who"></span><span id="timer">15:00</span></div>
+  <div id="qs"></div>
+  <div class="card"><button class="btn" onclick="submitExam()">ប្រគល់ចម្លើយ</button></div>
+</div>
+
+<!-- ទំព័រលទ្ធផល -->
+<div class="card hide" id="result">
+  <h1>លទ្ធផលប្រឡង</h1>
+  <div class="info" id="rinfo"></div>
+  <div class="score" id="rscore"></div>
+  <div class="grade" id="rgrade"></div>
+  <div class="note" id="rtry"></div>
+  <div id="review" style="margin-top:16px"></div>
+  <button class="btn" onclick="window.print()">បោះពុម្ពលទ្ធផល</button>
+</div>
+
+<footer>បង្កើតដោយ លី ពូអុី</footer>
+
+<script>
+const MAX_ATTEMPTS=2, MINUTES=15;
+const Q=[
+ {q:"រដ្ឋធម្មនុញ្ញនៃសាធារណរដ្ឋខ្មែរត្រូវបានអនុម័តតាមរយៈប្រជាមតិនៅថ្ងៃណា?",o:["៣០ ខែមេសា ឆ្នាំ១៩៧២","៤ ខែមិថុនា ឆ្នាំ១៩៧២","១៧ ខែមេសា ឆ្នាំ១៩៧៥","១៥ ខែសីហា ឆ្នាំ១៩៧៣"],a:0},
+ {q:"ការបោះឆ្នោតប្រធានាធិបតីនៅថ្ងៃទី៤ ខែមិថុនា ឆ្នាំ១៩៧២ អ្នកណាជាអ្នកឈ្នះ?",o:["លន់ នល់","សឺន សាន","អ៊ិន តាំ","ស៊ីសុវត្ថិ សិរីមតៈ"],a:0},
+ {q:"ការបោះឆ្នោតសភាជាតិក្នុងសម័យសាធារណរដ្ឋខ្មែរធ្វើឡើងនៅថ្ងៃណា?",o:["៣ ខែកញ្ញា ឆ្នាំ១៩៧២","៣០ ខែមេសា ឆ្នាំ១៩៧២","៤ ខែមិថុនា ឆ្នាំ១៩៧២","១៧ ខែមេសា ឆ្នាំ១៩៧៥"],a:0},
+ {q:"របបសាធារណរដ្ឋខ្មែរបានបញ្ចប់នៅថ្ងៃណា?",o:["១៧ ខែមេសា ឆ្នាំ១៩៧៥","៣០ ខែមេសា ឆ្នាំ១៩៧២","១៥ ខែសីហា ឆ្នាំ១៩៧៣","៣ ខែកញ្ញា ឆ្នាំ១៩៧២"],a:0},
+ {q:"ក្រោយកាន់កាប់ភ្នំពេញ ខ្មែរក្រហមបានបង្កើតរបបថ្មីមានឈ្មោះអ្វី?",o:["កម្ពុជាប្រជាធិបតេយ្យ","សាធារណរដ្ឋខ្មែរ","សង្គមរាស្ត្រនិយម","រាជាណាចក្រកម្ពុជា"],a:0},
+ {q:"សហរដ្ឋអាមេរិកបានបញ្ឈប់ការទម្លាក់គ្រាប់បែកក្នុងប្រទេសកម្ពុជានៅថ្ងៃណា?",o:["១៥ ខែសីហា ឆ្នាំ១៩៧៣","៤ ខែមិថុនា ឆ្នាំ១៩៧២","៣០ ខែមេសា ឆ្នាំ១៩៧២","១៧ ខែមេសា ឆ្នាំ១៩៧៥"],a:0},
+ {q:"អ្នកណាជាប្រធានរដ្ឋាភិបាល និងជាប្រធានាធិបតីនៃសាធារណរដ្ឋខ្មែរ?",o:["លន់ នល់","សឺន សាន","អ៊ិន តាំ","ប៉ុល ពត"],a:0},
+ {q:"តើមួយណាជាគោលការណ៍សំខាន់មួយនៃរដ្ឋធម្មនុញ្ញឆ្នាំ១៩៧២?",o:["ការបដិសេធការស្ដារឡើងវិញនូវរបបរាជានិយម","ការស្ដារឡើងវិញនូវរបបរាជានិយម","ការលុបចោលការបោះឆ្នោត","ការបិទប្រទេសពីពិភពលោក"],a:0},
+ {q:"តើអ្វីជាបញ្ហាសង្គមមួយក្នុងសម័យសាធារណរដ្ឋខ្មែរ?",o:["ការកើនឡើងនៃជនភៀសខ្លួនពីតំបន់សង្គ្រាមមកទីក្រុង","ការថយចុះនៃជនភៀសខ្លួន","ផលិតកម្មកសិកម្មកើនឡើងខ្លាំង","អតិផរណាធ្លាក់ចុះ"],a:0},
+ {q:"តើមួយណាជាមូលហេតុមួយនៃការដួលរលំរបបសាធារណរដ្ឋខ្មែរនៅឆ្នាំ១៩៧៥?",o:["ភាពទន់ខ្សោយផ្នែកយោធា និងការកើនឡើងកម្លាំងខ្មែរក្រហម","ការរួបរួមពេញលេញក្នុងរដ្ឋាភិបាល","ជំនួយបរទេសកើនឡើងជាបន្តបន្ទាប់","សេដ្ឋកិច្ចរីកចម្រើនខ្លាំង"],a:0}
+];
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const load=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let user,key,paper,ans,left,tick,done;
+
+function begin(){
+  const name=$('name').value.trim().replace(/\s+/g,' ');
+  if(name.length<2){$('err').textContent='សូមបញ្ចូលឈ្មោះសិស្សឱ្យបានត្រឹមត្រូវ';return}
+  key='khexam:'+name.toLowerCase();
+  const rec=load(key)||{used:0,scores:[]};
+  if(rec.used>=MAX_ATTEMPTS){
+    $('err').textContent='អ្នកបានប្រឡងគ្រប់ '+MAX_ATTEMPTS+' ដងហើយ។ ពិន្ទុខ្ពស់បំផុត៖ '+Math.max(0,...rec.scores)+'/១០០';return}
+  rec.used++;save(key,rec);
+  user=name;done=false;ans={};
+  paper=shuffle(Q).map(x=>{const o=shuffle(x.o.map((t,i)=>({t,c:i===x.a})));return{q:x.q,o}});
+  $('start').classList.add('hide');$('exam').classList.remove('hide');
+  $('who').textContent=name+' • ដងទី '+rec.used+'/'+MAX_ATTEMPTS;
+  $('qs').innerHTML=paper.map((p,i)=>'<div class="card"><div class="q">'+(i+1)+'. '+p.q+'</div>'+
+    p.o.map((o,j)=>'<label class="opt" id="o'+i+'_'+j+'"><input type="radio" name="q'+i+'" onchange="pick('+i+','+j+')">'+o.t+'</label>').join('')+'</div>').join('');
+  left=MINUTES*60;clock();tick=setInterval(()=>{left--;clock();if(left<=0)submitExam()},1000);
+  window.scrollTo(0,0);
+}
+function pick(i,j){ans[i]=j;paper[i].o.forEach((_,k)=>$('o'+i+'_'+k).classList.toggle('sel',k===j))}
+function clock(){const m=Math.floor(left/60),s=left%60;$('timer').textContent=('0'+m).slice(-2)+':'+('0'+s).slice(-2)}
+function submitExam(){
+  if(done)return;
+  const un=paper.length-Object.keys(ans).length;
+  if(un>0&&left>0&&!confirm('នៅសល់ '+un+' សំណួរមិនទាន់ឆ្លើយ។ ប្រគល់ចម្លើយឬ?'))return;
+  done=true;clearInterval(tick);
+  let ok=0;
+  const rv=paper.map((p,i)=>{
+    const good=ans[i]!==undefined&&p.o[ans[i]].c;if(good)ok++;
+    return '<div class="card" style="padding:14px"><div class="q">'+(i+1)+'. '+p.q+'</div>'+
+      p.o.map((o,j)=>'<div class="opt '+(o.c?'ok':(ans[i]===j?'no':''))+'">'+o.t+(ans[i]===j?' ◄':'')+'</div>').join('')+'</div>';
+  }).join('');
+  const score=ok*10;
+  const rec=load(key)||{used:1,scores:[]};rec.scores.push(score);save(key,rec);
+  const g=score>=90?'A (ល្អប្រសើរ)':score>=80?'B (ល្អណាស់)':score>=70?'C (ល្អ)':score>=60?'D (ល្អបង្គួរ)':score>=50?'E (មធ្យម)':'F (ធ្លាក់)';
+  const date=new Date().toLocaleDateString('km-KH');
+  $('rinfo').innerHTML='<p>ឈ្មោះ៖ <b>'+user+'</b></p><p>ថ្នាក់៖ <b>ថ្នាក់ទី១២</b></p><p>សាលា៖ <b>វិទ្យាល័យប៊ុនរ៉ានីហ៊ុនសែនចាន់ថ្នាល</b></p><p>កាលបរិច្ឆេទ៖ '+date+'</p><p>ឆ្លើយត្រូវ៖ '+ok+'/'+paper.length+'</p>';
+  $('rscore').textContent=score+' / ១០០';
+  $('rgrade').textContent='និទ្ទេស '+g;
+  const rem=MAX_ATTEMPTS-rec.used;
+  $('rtry').textContent=rem>0?'អ្នកនៅសល់ឱកាសប្រឡងម្តងទៀត '+rem+' ដង។ សូមផ្ទុកទំព័រឡើងវិញ (Refresh) ដើម្បីប្រឡងម្តងទៀត។':'អ្នកបានប្រឡងគ្រប់ '+MAX_ATTEMPTS+' ដងហើយ។ ពិន្ទុខ្ពស់បំផុត៖ '+Math.max(...rec.scores)+'/១០០';
+  $('review').innerHTML='<h1 style="margin-bottom:10px">ចម្លើយត្រឹមត្រូវ</h1>'+rv;
+  $('exam').classList.add('hide');$('result').classList.remove('hide');window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
